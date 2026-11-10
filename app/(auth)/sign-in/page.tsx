@@ -32,14 +32,14 @@ const SignInPage = async({searchParams}:SignInPageProps) => {
   return (
      <Card className="border-border/80 shadow-sm">
       <CardHeader className="items-center text-center">
-        <div className="mb-6 flex justify-center pt-2">
+        <div className="mb-4 flex justify-center pt-2">
           <Image
             src="/logo2.svg"
             alt="Themis"
-            width={172}
-            height={172}
+            width={48}
+            height={48}
             priority
-            className="text-foreground"
+            className="size-12 rounded-xl"
           />
         </div>
         <CardTitle className="text-base">Welcome back</CardTitle>

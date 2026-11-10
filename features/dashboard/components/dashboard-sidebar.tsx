@@ -34,13 +34,13 @@ export function DashboardSidebar({ user, plan = "Pro" }: DashboardSidebarProps) 
               tooltip="Themis"
               render={
                 <Link href={DASHBOARD_ROUTES.overview}>
-                  <span className="flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-none bg-sidebar">
+                  <span className="flex size-7 shrink-0 items-center justify-center overflow-hidden rounded-md bg-sidebar">
                     <Image
                       src="/logo2.svg"
                       alt="Themis"
-                      width={62}
-                      height={62}
-                      className="object-contain"
+                      width={28}
+                      height={28}
+                      className="size-7 rounded-md object-contain"
                     />
                   </span>
                   <span className="grid flex-1 text-left leading-tight group-data-[collapsible=icon]:hidden">
