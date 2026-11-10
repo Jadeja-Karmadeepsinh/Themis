@@ -18,8 +18,8 @@ import { GithubSignInForm } from '@/features/auth/components/github-sign-in-form
 
 
 export const metadata: Metadata = {
-  title: "Sign in",
-  description: "Sign in to Chai AI Code Reviewer with your GitHub account.",
+  title: "Sign in · Themis",
+  description: "Sign in to Themis with your GitHub account.",
 };
 
 type SignInPageProps = {
@@ -35,7 +35,7 @@ const SignInPage = async({searchParams}:SignInPageProps) => {
         <div className="mb-6 flex justify-center pt-2">
           <Image
             src="/logo2.svg"
-            alt="Chai AI Code Reviewer"
+            alt="Themis"
             width={172}
             height={172}
             priority

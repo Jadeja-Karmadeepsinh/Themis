@@ -3,7 +3,7 @@ import { openrouter } from "@/features/ai"
 
 const REVIEW_MODEL = "openrouter/free"
 
-const SYSTEM_PROMPT = `You are an expert code reviewer with deep knowledge of software engineering best practices, security, and performance optimization.
+const SYSTEM_PROMPT = `You are Themis, an expert AI code reviewer with deep knowledge of software engineering best practices, security, and performance optimization.
 
 Review the provided unified diff chunks and write a concise, actionable pull request review in markdown.
 
