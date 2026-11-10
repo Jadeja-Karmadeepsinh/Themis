@@ -28,22 +28,51 @@ function buildDisconnectedStatus(): GithubInstallationStatus {
 }
 
 
-export async function getInstallationStatus(userId: string) {
-    const installation = await prisma.githubInstallation.findUnique({
+export async function getInstallationStatus(userId: string): Promise<GithubInstallationStatus> {
+    let installation = await prisma.githubInstallation.findUnique({
         where: {
             userId
         }
     });
 
     if (!installation) {
-        return buildDisconnectedStatus()
+        try {
+            const account = await prisma.account.findFirst({
+                where: { userId, providerId: "github" },
+            });
+
+            const app = getGithubApp();
+            const { data: installations } = await app.octokit.request("GET /app/installations");
+
+            let matched = installations.find((inst) => {
+                if (account && String(inst.account?.id) === account.accountId) return true;
+                return false;
+            });
+
+            if (!matched && installations.length === 1) {
+                matched = installations[0];
+            }
+
+            if (matched) {
+                await saveInstallation(userId, matched.id);
+                installation = await prisma.githubInstallation.findUnique({
+                    where: { userId },
+                });
+            }
+        } catch (e) {
+            console.error("Auto-sync error in getInstallationStatus:", e);
+        }
+    }
+
+    if (!installation) {
+        return buildDisconnectedStatus();
     }
 
     return {
         connected: true,
         accountLogin: installation.accountLogin,
         installedAt: installation.createdAt.toISOString()
-    }
+    };
 }
 
 
@@ -92,10 +121,18 @@ export async function getUserIdByInstallationId(installationId: number) {
 }
 
 export async function getUserInstallationId(userId: string) {
-    const installation = await prisma.githubInstallation.findUnique({
+    let installation = await prisma.githubInstallation.findUnique({
         where: { userId },
         select: { installationId: true },
     });
+
+    if (!installation) {
+        await getInstallationStatus(userId);
+        installation = await prisma.githubInstallation.findUnique({
+            where: { userId },
+            select: { installationId: true },
+        });
+    }
 
     if (!installation) {
         return null;
