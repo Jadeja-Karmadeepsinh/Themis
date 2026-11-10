@@ -7,5 +7,5 @@ import { syncRepoCodebaseFunction } from "@/features/repo-sync/server/repo-sync-
 
 export const { GET, POST, PUT } = serve({
   client: inngest,
-  functions: [processTask, reviewPullRequest , syncRepoCodebaseFunction],
+  functions: [processTask, reviewPullRequest, syncRepoCodebaseFunction],
 });
