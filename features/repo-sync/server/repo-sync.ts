@@ -1,14 +1,13 @@
 import { CodeChunk } from "@/features/reviews/types/review";
 import { RepoFile } from "../types";
 import { getGithubApp } from "@/features/github/utils/github-app";
-import { getPineconeIndex } from "@/features/pinecone/client";
+import { deleteDocumentNamespace, upsertDocumentChunks } from "@/features/pinecone/client";
 import { prisma } from "@/lib/db";
 import { inngest } from "@/features/inngest/client";
 
 const MAX_FILE_SIZE_BYTES = 100_000;
 const MAX_FILES = 200;
 const MAX_CHUNK_LINES = 80;
-const UPSERT_BATCH_SIZE = 90;
 
 
 const CODE_EXTENSIONS = [
@@ -98,15 +97,29 @@ export function buildRepoNamespace(repoFullName: string) {
   
     const entries = tree.tree.filter(isIndexableFile).slice(0, MAX_FILES);
     const files: RepoFile[] = [];
+    const CONCURRENCY = 8;
   
-    for (const entry of entries) {
-      const { data: blob } = await octokit.request(
-        "GET /repos/{owner}/{repo}/git/blobs/{file_sha}",
-        { owner, repo, file_sha: entry.sha! }
+    for (let i = 0; i < entries.length; i += CONCURRENCY) {
+      const slice = entries.slice(i, i + CONCURRENCY);
+      const batchResults = await Promise.all(
+        slice.map(async (entry) => {
+          try {
+            const { data: blob } = await octokit.request(
+              "GET /repos/{owner}/{repo}/git/blobs/{file_sha}",
+              { owner, repo, file_sha: entry.sha! }
+            );
+            const content = Buffer.from(blob.content, "base64").toString("utf-8");
+            return { filePath: entry.path!, content };
+          } catch (e) {
+            console.warn(`Failed to fetch blob for ${entry.path}:`, e);
+            return null;
+          }
+        })
       );
   
-      const content = Buffer.from(blob.content, "base64").toString("utf-8");
-      files.push({ filePath: entry.path!, content });
+      for (const res of batchResults) {
+        if (res) files.push(res);
+      }
     }
   
     return files;
@@ -114,24 +127,11 @@ export function buildRepoNamespace(repoFullName: string) {
   
 
   export async function deleteRepoNamespace(namespace: string) {
-    const index = getPineconeIndex();
-    await index.deleteNamespace(namespace);
+    await deleteDocumentNamespace(namespace);
   }
 
   export async function saveRepoChunks(namespace: string, chunks: CodeChunk[]) {
-    const index = getPineconeIndex();
-  
-    for (let start = 0; start < chunks.length; start += UPSERT_BATCH_SIZE) {
-      const batch = chunks.slice(start, start + UPSERT_BATCH_SIZE);
-  
-      const records = batch.map((chunk) => ({
-        id: chunk.id,
-        text: chunk.text,
-        filePath: chunk.filePath,
-      }));
-  
-      await index.namespace(namespace).upsertRecords({ records });
-    }
+    await upsertDocumentChunks(namespace, chunks);
   }
 
 

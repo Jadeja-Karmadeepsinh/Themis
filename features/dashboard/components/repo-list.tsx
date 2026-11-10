@@ -33,7 +33,17 @@ export function RepoList() {
         isFetchingNextPage,
         isPending,
         isError,
-    } = useInfiniteQuery(githubReposInfiniteQuery)
+    } = useInfiniteQuery({
+        ...githubReposInfiniteQuery,
+        refetchInterval: (query) => {
+            const pages = (query.state.data as any)?.pages;
+            if (!pages) return false;
+            const anySyncing = pages.some((p: any) =>
+                p.repos?.some((r: any) => r.syncStatus === "pending" || r.syncStatus === "syncing")
+            );
+            return anySyncing ? 3000 : false;
+        },
+    });
 
     const loading = isPending && !data;
 

@@ -10,13 +10,18 @@ import {
 
 
 export const syncRepoCodebaseFunction = inngest.createFunction({
-    id: "sync-repo-codebas",
+    id: "sync-repo-codebase",
     triggers: { event: "repo/sync.requested" },
     onFailure: async ({ event }) => {
-        await prisma.repoSync.update({
-            where: { id: event.data.event.data.repoSyncId },
-            data: { status: "failed" },
-        });
+        const repoSyncId =
+            (event as any)?.data?.event?.data?.repoSyncId ||
+            (event as any)?.data?.repoSyncId;
+        if (repoSyncId) {
+            await prisma.repoSync.update({
+                where: { id: repoSyncId },
+                data: { status: "failed" },
+            }).catch(console.error);
+        }
     }
 },
 
@@ -36,7 +41,7 @@ export const syncRepoCodebaseFunction = inngest.createFunction({
                 repoSync.installationId,
                 repoSync.repoFullName,
                 repoSync.branch
-            )
+            );
 
             return chunkRepoFiles(files);
         });
@@ -46,7 +51,7 @@ export const syncRepoCodebaseFunction = inngest.createFunction({
         if (repoSync.syncedAt) {
             await step.run("delete-old-vectors", async () => {
                 await deleteRepoNamespace(namespace);
-            })
+            });
         }
 
         await step.run("save-vectors-to-pinecone", async () => {
@@ -70,6 +75,6 @@ export const syncRepoCodebaseFunction = inngest.createFunction({
             repoSyncId,
             status: "synced",
             chunkCount: chunks.length,
-        }
+        };
     }
-)
+);

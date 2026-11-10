@@ -1,5 +1,5 @@
 import type { CodeChunk } from "@/features/reviews/types/review";
-import { getPineconeIndex } from "@/features/pinecone/client";
+import { searchDocumentChunks, upsertDocumentChunks } from "@/features/pinecone/client";
 
 const CONTEXT_RESULTS = 10;
 
@@ -11,35 +11,20 @@ export async function saveChunksToPinecone(
     namespace: string,
     chunks: CodeChunk[]
 ) {
-    const index = getPineconeIndex();
-
-    const records = chunks.map((chunk) => ({
-        id: chunk.id,
-        text: chunk.text,
-        filePath: chunk.filePath,
-    }));
-
     // namespace() scopes vectors so this PR never mixes with repo-wide sync data
-    await index.namespace(namespace).upsertRecords({ records });
+    await upsertDocumentChunks(namespace, chunks);
 }
 
-
 export async function searchPrContext(namespace: string, query: string) {
-    const index = getPineconeIndex();
-
-    const response = await index.namespace(namespace).searchRecords({
-        query: { topK: CONTEXT_RESULTS, inputs: { text: query } },
-    });
-
+    const hits = await searchDocumentChunks(namespace, query, CONTEXT_RESULTS);
     const snippets: string[] = [];
 
-    for (const hit of response.result.hits) {
-        const fields = hit.fields as { text?: string; filePath?: string };
-        if (!fields.text) {
+    for (const hit of hits) {
+        if (!hit.chunkText) {
             continue;
         }
 
-        snippets.push(`File: ${fields.filePath}\n${fields.text}`);
+        snippets.push(`File: ${hit.title ?? "unknown"}\n${hit.chunkText}`);
     }
 
     return snippets;
