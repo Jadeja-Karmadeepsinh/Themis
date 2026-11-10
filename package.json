@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "webhook": "smee -u https://smee.io/ZUjNcug9WuJONlx -t http://localhost:3000/api/github/webhook",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"
@@ -51,6 +52,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.2.9",
     "prisma": "^7.8.0",
+    "smee-client": "^5.0.0",
     "tailwindcss": "^4",
     "typescript": "^5"
   }
