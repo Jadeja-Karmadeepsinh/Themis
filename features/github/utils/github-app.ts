@@ -18,7 +18,7 @@ export function getGithubApp(){
 }
 
 export function getGithubInstallUrl(userId: string) {
-    const appSlug = process.env.NEXT_PUBLIC_GITHUB_APP_SLUG || "themis-pr-review";
+    const appSlug = process.env.NEXT_PUBLIC_GITHUB_APP_SLUG || "themis-jadeja-karmadeepsinh";
     const url = new URL(`https://github.com/apps/${appSlug}/installations/new`);
     // `state` round-trips through GitHub so we can link the installation to this user.
     url.searchParams.set("state", userId);
