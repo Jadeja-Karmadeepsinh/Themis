@@ -37,18 +37,19 @@ export async function upsertDocumentChunks(
     namespace: string,
     chunks: DocumentChunkInput[]
 ): Promise<void> {
-    if (chunks.length === 0) return;
+    const validChunks = chunks.filter((c) => c.text && c.text.trim().length > 0);
+    if (validChunks.length === 0) return;
 
     const host = await getPineconeIndexHost();
     const apiKey = process.env.PINECONE_API_KEY!;
     const url = `https://${host}/namespaces/${encodeURIComponent(namespace)}/documents/upsert`;
 
-    for (let start = 0; start < chunks.length; start += BATCH_SIZE) {
-        const batch = chunks.slice(start, start + BATCH_SIZE);
+    for (let start = 0; start < validChunks.length; start += BATCH_SIZE) {
+        const batch = validChunks.slice(start, start + BATCH_SIZE);
         const documents = batch.map((chunk) => ({
             _id: chunk.id,
             title: chunk.filePath,
-            chunk_text: chunk.text,
+            chunk_text: chunk.text.trim(),
         }));
 
         const response = await fetch(url, {

@@ -67,8 +67,10 @@ export function buildRepoNamespace(repoFullName: string) {
   
       for (let start = 0; start < lines.length; start += MAX_CHUNK_LINES) {
         const part = start / MAX_CHUNK_LINES;
-        const text = lines.slice(start, start + MAX_CHUNK_LINES).join("\n");
-  
+        const text = lines.slice(start, start + MAX_CHUNK_LINES).join("\n").trim();
+
+        if (!text) continue;
+
         chunks.push({
           id: buildChunkId(file.filePath, part),
           filePath: file.filePath,

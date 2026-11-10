@@ -16,8 +16,10 @@ function buildChunkId(prNumber: number, filePath: string, part: number) {
       // Slide a fixed-size window across the diff; large files produce many chunks
       for (let start = 0; start < lines.length; start += MAX_CHUNK_LINES) {
         const part = start / MAX_CHUNK_LINES;
-        const text = lines.slice(start, start + MAX_CHUNK_LINES).join("\n");
-  
+        const text = lines.slice(start, start + MAX_CHUNK_LINES).join("\n").trim();
+
+        if (!text) continue;
+
         chunks.push({
           id: buildChunkId(prNumber, file.filePath, part),
           filePath: file.filePath,
